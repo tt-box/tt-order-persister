@@ -2,7 +2,8 @@
   "name": "tt-order-persister",
   "main": "tt-order-persister.html",
   "dependencies": {
-    "polymer": "Polymer/polymer#^1.4.0"
+    "polymer": "Polymer/polymer#^1.4.0",
+    "app-pouchdb": "PolymerElements/app-pouchdb#^0.9.2"
   },
   "devDependencies": {
     "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",
