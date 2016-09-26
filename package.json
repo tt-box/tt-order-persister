@@ -1,20 +1,20 @@
 {
-  "name": "tt-basket",
+  "name": "tt-order-persister",
   "version": "0.0.1",
   "description": "Cash register Basket",
   "main": "index.html",
   "repository": {
     "type": "git",
-    "url": "https://github.com/tt-box/tt-basket.git"
+    "url": "https://github.com/tt-box/tt-order-persister.git"
   },
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "lint": "polymer lint --input tt-basket.html",
+    "lint": "polymer lint --input tt-order-persister.html",
     "dev": "polymer serve -p 8080 & npm run watch",
     "test": "polymer test",
-    "watch": "browser-sync start --proxy localhost:8080 --startPath '/components/tt-basket/demo/' --files '*.html, *.js, demo/*' "
+    "watch": "browser-sync start --proxy localhost:8080 --startPath '/components/tt-order-persister/demo/' --files '*.html, *.js, demo/*' "
   },
   "author": "",
   "license": "ISC",
