@@ -1,5 +1,11 @@
 <link rel="import" href="../polymer/polymer.html">
 
+<link rel="import" href="../app-pouchdb/app-pouchdb-index.html">
+<link rel="import" href="../app-pouchdb/app-pouchdb-query.html">
+<link rel="import" href="../app-pouchdb/app-pouchdb-document.html">
+<link rel="import" href="../app-pouchdb/app-pouchdb-conflict-resolution.html">
+<link rel="import" href="../app-pouchdb/app-pouchdb-sync.html">
+
 <!--
 `tt-order-persister`
 
@@ -8,27 +14,39 @@
 -->
 
 <dom-module id="tt-order-persister">
-  <template>
-    <style>
-      :host {
-        display: block;
-      }
-    </style>
-    <h2>Hello [[prop1]]</h2>
-  </template>
+    <template>
+        <style>
+            :host {
+                display: block;
+            }
+        </style>
+        <h2>Hello [[prop1]]</h2>
+        <app-pouchdb-index name="[[dbName]]" fields="['num']"></app-pouchdb-index>
+        <app-pouchdb-document
+                db-name="[[dbName]]"
+                doc-id="parsnip"
+                data="{{cat}}">
+        </app-pouchdb-document>
 
-  <script>
-    Polymer({
+    </template>
 
-      is: 'tt-order-persister',
+    <script>
+        Polymer({
 
-      properties: {
-        prop1: {
-          type: String,
-          value: 'tt-order-persister',
-        },
-      },
+            is: 'tt-order-persister',
 
-    });
-  </script>
+            properties: {
+                /**
+                 * The name of the database. This can be either a local database (such
+                 * as "cats"), or a remote one (e.g., "https://example.com:5678/cats").
+                 */
+                dbName: {
+                    type: String,
+                    value: 'orders',
+                    readOnly: true,
+                }
+            },
+
+        });
+    </script>
 </dom-module>
