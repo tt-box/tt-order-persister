@@ -1,0 +1,34 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<!--
+`tt-order-persister`
+
+
+@demo demo/index.html 
+-->
+
+<dom-module id="tt-order-persister">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+    <h2>Hello [[prop1]]</h2>
+  </template>
+
+  <script>
+    Polymer({
+
+      is: 'tt-order-persister',
+
+      properties: {
+        prop1: {
+          type: String,
+          value: 'tt-order-persister',
+        },
+      },
+
+    });
+  </script>
+</dom-module>
