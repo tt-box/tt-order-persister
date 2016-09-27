@@ -23,9 +23,9 @@
 
         <app-pouchdb-index name="[[dbName]]" fields="['num']"></app-pouchdb-index>
         <app-pouchdb-document id="orderDB"
-                db-name="[[dbName]]"
-                doc-id="parsnip"
-                data="{{data}}">
+                              db-name="[[dbName]]"
+                              doc-id="parsnip"
+                              data="{{data}}">
         </app-pouchdb-document>
 
     </template>
@@ -57,16 +57,35 @@
             },
 
 
+            generateKey: function () {
+                crypto.subtle.generateKey(
+                        {
+                            name: "HMAC",
+                            hash: {name: "SHA-256"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
+                            //length: 256, //optional, if you want your key length to differ from the hash function's block length
+                        },
+                        false, //whether the key is extractable (i.e. can be used in exportKey)
+                        ["sign", "verify"] //can be any combination of "sign" and "verify"
+                )
+                        .then(function (key) {
+                            //returns a key object
+                            console.log(key);
+                        })
+                        .catch(function (err) {
+                            console.error(err);
+                        });
+            },
+
             saveOrder: function (model) {
                 this.order = model;
-                var buffer = new TextEncoder('utf-8').encode(JSON.stringify(model) );
-                var key = "abcd";
+                var buffer = new TextEncoder('utf-8').encode(JSON.stringify(model));
+                var key = 'abcd';
                 crypto.subtle.sign("HMAC", key, buffer)
-                  .then(function (mac) {
-                      console.log('compute HMAC : ' + mac);
-                      this.orderId = mac;
-                      this.$.orderDB.save();
-                  });
+                        .then(function (mac) {
+                            console.log('compute HMAC : ' + mac);
+                            this.orderId = mac;
+                            this.$.orderDB.save();
+                        });
             },
 
         });
