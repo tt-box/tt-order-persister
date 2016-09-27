@@ -22,10 +22,10 @@
         </style>
         <h2>Hello [[prop1]]</h2>
         <app-pouchdb-index name="[[dbName]]" fields="['num']"></app-pouchdb-index>
-        <app-pouchdb-document
+        <app-pouchdb-document id="orderDB"
                 db-name="[[dbName]]"
                 doc-id="parsnip"
-                data="{{cat}}">
+                data="{{data}}">
         </app-pouchdb-document>
 
     </template>
@@ -44,7 +44,25 @@
                     type: String,
                     value: 'orders',
                     readOnly: true,
+                },
+                order: {
+                    type: Object,
+                    value: function () {
+                        return {};
+                    },
+                },
+                orderId: {
+                    type: String
                 }
+            },
+
+            saveOrder: function (model) {
+                this.order = model;
+                crypto.subtle.digest("SHA-256", model)
+                  .then(function (digest) {
+                      this.orderId = digest;
+                      this.$.orderDB.save();
+                  });
             },
 
         });
