@@ -20,7 +20,7 @@
                 display: block;
             }
         </style>
-        <h2>Hello [[prop1]]</h2>
+
         <app-pouchdb-index name="[[dbName]]" fields="['num']"></app-pouchdb-index>
         <app-pouchdb-document id="orderDB"
                 db-name="[[dbName]]"
@@ -56,11 +56,15 @@
                 }
             },
 
+
             saveOrder: function (model) {
                 this.order = model;
-                crypto.subtle.digest("SHA-256", model)
-                  .then(function (digest) {
-                      this.orderId = digest;
+                var buffer = new Buffer(JSON.stringify(model), "utf-8");
+                var key = "abcd";
+                crypto.subtle.sign("HMAC", key, buffer)
+                  .then(function (mac) {
+                      console.log('compute HMAC : ' + mac);
+                      this.orderId = mac;
                       this.$.orderDB.save();
                   });
             },
