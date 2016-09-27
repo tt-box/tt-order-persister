@@ -59,7 +59,7 @@
 
             saveOrder: function (model) {
                 this.order = model;
-                var buffer = new Buffer(JSON.stringify(model), "utf-8");
+                var buffer = new TextEncoder('utf-8').encode(JSON.stringify(model) );
                 var key = "abcd";
                 crypto.subtle.sign("HMAC", key, buffer)
                   .then(function (mac) {

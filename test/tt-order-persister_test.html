@@ -26,6 +26,19 @@
           assert.equal(element.is, 'tt-order-persister');
         });
 
+        test('save order', function() {
+          var element = fixture('basic');
+          var order = {
+            total: {cent:125, currency: 'EUR'},
+            items: [
+              { price: {cent:4, currency: 'eur'},
+                product: {name: 'Item 1'}
+              }
+            ]
+          };
+          element.saveOrder(order);
+        });
+
       });
     </script>
   </body>
