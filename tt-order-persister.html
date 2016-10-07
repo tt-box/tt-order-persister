@@ -79,15 +79,19 @@
                 });
                 return promise;
             },
+            _convertDataToBuffer:function (data) {
+                var buffer = new TextEncoder('utf-8').encode(JSON.stringify(data));
+                return buffer;
+            },
             _signHMAC: function (jwk, data) {
                 var self = this;
                 var algo = {name: "HMAC", hash: {name: "SHA-256"}};
                 var cryptoSubtle = this._getCryptoSubtle();
                 console.log('import jwk : ', jwk);
                 var promise = cryptoSubtle.importKey('jwk', jwk, algo, true, ['sign']);
-                promise.then(function (key) {
+                promise =  promise.then(function (key) {
                     console.log('jwk read :', key);
-                    var buffer = new TextEncoder('utf-8').encode(JSON.stringify(data));
+                    var buffer = self._convertDataToBuffer(data);
                     return cryptoSubtle.sign(algo, key, buffer);
                 }).then(function (mac) {
                     var macHex = self.toHexString(mac);
@@ -96,22 +100,37 @@
                 });
                 return promise;
             },
-            _verifyHmac: function (jwk, macHex) {
+            _verifyHmac: function (jwk, macHex, data) {
                 var self = this;
                 var algo = {name: "HMAC", hash: {name: "SHA-256"}};
-//                var mac = this.
+                var mac =  macHex;  //FIXME Convert to buffer
                 var cryptoSubtle = this._getCryptoSubtle();
                 var promise = cryptoSubtle.importKey('jwk', jwk, algo, true, ['verify']);
-                promise = promise.verify(algo, key, mac, text2verify);
+                promise = promise.then(function (key) {
+                    var text2verify = self._convertDataToBuffer(data);
+                    return  cryptoSubtle.verify(algo, key, mac, text2verify);
+                });
+                return promise;
+
             },
 
             testHmac: function () {
                 var self = this;
                 var data = 'coucou tous le monde';
+                var jwkSave;
 //                this.saveOrder('coucou');
+                // generate Key
                 var promiseJwk = this._generateCryptoKey();
-                promiseJwk.then(function (jwk) {
+                //Sign
+                var promiseSign = promiseJwk.then(function (jwk) {
+                    jwkSave = jwk;
                     return self._signHMAC(jwk, data);
+                });
+                // Verify
+                var promiseVerify =promiseSign.then(function (macHex) {
+                    return self._verifyHmac(jwkSave, macHex, data);
+                }).then(function (isValid) {
+                    console.log('isValid : ', isValid);
                 });
             },
 
