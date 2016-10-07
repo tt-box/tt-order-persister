@@ -8,6 +8,8 @@
 
     <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
     <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
+    <link rel="import" href="../../paper-input/paper-input.html">
+    <link rel="import" href="../../paper-icon-button/paper-icon-button.html">
 
     <link rel="import" href="../tt-order-persister.html">
 
@@ -19,9 +21,17 @@
     <div class="vertical-section-container centered">
       <h3>Basic tt-order-persister Demo</h3>
       <demo-snippet>
-        <template>
+        <template is="dom-bind" id="demo">
+          <paper-input label="total">
+            <div prefix>$</div>
+            <paper-icon-button id="myButton" suffix icon="clear"></paper-icon-button>
+          </paper-input>
           <tt-order-persister></tt-order-persister>
         </template>
+        <script>
+            var demo = document.querySelector('#demo');
+        </script>
+
       </demo-snippet>
     </div>
 

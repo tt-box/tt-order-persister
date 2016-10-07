@@ -28,6 +28,7 @@
                               data="{{data}}">
         </app-pouchdb-document>
 
+        <h1 on-tap="testHmac">Hash</h1>
     </template>
 
     <script>
@@ -55,37 +56,115 @@
                     type: String
                 }
             },
-
-
-            generateKey: function () {
-                crypto.subtle.generateKey(
-                        {
-                            name: "HMAC",
-                            hash: {name: "SHA-256"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
-                            //length: 256, //optional, if you want your key length to differ from the hash function's block length
-                        },
-                        false, //whether the key is extractable (i.e. can be used in exportKey)
-                        ["sign", "verify"] //can be any combination of "sign" and "verify"
-                )
-                        .then(function (key) {
-                            //returns a key object
-                            console.log(key);
-                        })
-                        .catch(function (err) {
-                            console.error(err);
-                        });
+            _getCryptoSubtle: function () {
+                var crypto = window.crypto || window.msCrypto; //for IE11
+                if (crypto.webkitSubtle) {
+                    return window.crypto.webkitSubtle; //for Safari
+                }
+                return crypto.subtle;
             },
 
+            _generateCryptoKey: function () {
+                var cryptoSubtle = this._getCryptoSubtle();
+                //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
+                var algo = {name: "HMAC", hash: {name: "SHA-256"}};
+                var promise = cryptoSubtle.generateKey(algo, true, ["sign", "verify"]);
+                promise = promise.then(function (key) {
+                    return cryptoSubtle.exportKey('jwk', key);
+                }).then(function (jwk) {
+                    console.log('jwk : ', jwk);
+                    return jwk;
+                }).catch(function (err) {
+                    console.error(err);
+                });
+                return promise;
+            },
+            _signHMAC: function (jwk, data) {
+                var self = this;
+                var algo = {name: "HMAC", hash: {name: "SHA-256"}};
+                var cryptoSubtle = this._getCryptoSubtle();
+                console.log('import jwk : ', jwk);
+                var promise = cryptoSubtle.importKey('jwk', jwk, algo, true, ['sign']);
+                promise.then(function (key) {
+                    console.log('jwk read :', key);
+                    var buffer = new TextEncoder('utf-8').encode(JSON.stringify(data));
+                    return cryptoSubtle.sign(algo, key, buffer);
+                }).then(function (mac) {
+                    var macHex = self.toHexString(mac);
+                    console.log('compute HMAC : ', macHex);
+                    return macHex;
+                });
+                return promise;
+            },
+            _verifyHmac: function (jwk, macHex) {
+                var self = this;
+                var algo = {name: "HMAC", hash: {name: "SHA-256"}};
+//                var mac = this.
+                var cryptoSubtle = this._getCryptoSubtle();
+                var promise = cryptoSubtle.importKey('jwk', jwk, algo, true, ['verify']);
+                promise = promise.verify(algo, key, mac, text2verify);
+            },
+
+            testHmac: function () {
+                var self = this;
+                var data = 'coucou tous le monde';
+//                this.saveOrder('coucou');
+                var promiseJwk = this._generateCryptoKey();
+                promiseJwk.then(function (jwk) {
+                    return self._signHMAC(jwk, data);
+                });
+            },
+
+            toHexString: function (buffer) {
+                var byteArray = new Uint8Array(buffer);
+                return byteArray.map(function (byte) {
+                    return ('0' + (byte & 0xFF).toString(16)).slice(-2);
+                }).join('')
+            },
             saveOrder: function (model) {
+                var cryptoSubtle = this._getCryptoSubtle();
                 this.order = model;
                 var buffer = new TextEncoder('utf-8').encode(JSON.stringify(model));
-                var key = 'abcd';
-                crypto.subtle.sign("HMAC", key, buffer)
-                        .then(function (mac) {
-                            console.log('compute HMAC : ' + mac);
-                            this.orderId = mac;
-                            this.$.orderDB.save();
+                var self = this;
+                var HMAC = {name: "HMAC", hash: {name: 'SHA-256'}};
+                window.crypto.subtle.generateKey(HMAC, true, ['sign', 'verify'])
+                        .then(function (key) {
+                            console.log('Crypto key : ', key);
+                            window.crypto.subtle.exportKey('jwk', key).then(function (jwk) {
+                                console.log('jwk : ', jwk);
+                            });
+                            return window.crypto.subtle.sign(HMAC, key, buffer).then(function (mac) {
+                                var decoder = new TextDecoder('latin1');
+//                                var decodedString = window.btoa(decoder.decode(mac));
+//                                var decodedString = self.arrayBufferToBase64(mac);
+//                                 var decodedString = btoa(String.fromCharCode.apply(self, mac));
+                                var decodedString = self.toHexString(mac);
+                                console.log('compute HMAC : ', mac);
+                                console.log('size HMAC : ', new Uint8Array(mac).length);
+                                console.log('compute HMAC : ', decodedString);
+                                return mac;
+                            }).catch(function (err) {
+                                console.error(err);
+                            });
                         });
+
+//                var promise = this._generateCryptoKey().then(function (key) {
+//                    console.log('Crypto key : ', key);
+//                    return cryptoSubtle.sign("HMAC", key, buffer).then(function (mac) {
+//                        console.log('compute HMAC : ', mac);
+//                        self.orderId = mac;
+//                        self.$.orderDB.save();
+//                    });
+//                });
+//                promise.then(function (mac) {
+//                    console.log('compute HMAC : ' ,mac);
+//                    self.orderId = mac;
+//                    return self.$.orderDB.save();
+//                });
+//                .catch(function (err) {
+//                            console.log(err);
+//                });
+
             },
 
         });
