@@ -1,0 +1,184 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<!--
+`fire-hmac-sign-behaviour`
+Polymer Element fire-hmac-sign-behaviour
+
+@demo demo/index.html 
+-->
+
+
+<script>
+    /**
+     * FiveElements Namespace definition
+     */
+    var FiveElements = FiveElements || {};
+
+    /**
+     * @polymerBehavior
+     */
+    FiveElements.FireHmacSignBehavior = {
+        properties: {
+            algo: {
+                type: Object,
+                value: function () {
+                    //can be 'SHA-1', 'SHA-256', 'SHA-384', or 'SHA-512'
+                    return {name: "HMAC", hash: {name: "SHA-256"}};
+                    //return { name: "ECDSA",  namedCurve: "P-256", hash: { name: "SHA-256" } }
+                }
+            },
+            // can be 'raw', 'pkcs8', 'spki', 'jwk'
+            keyFormat: {
+                type: String,
+                value: 'jwk'
+            },
+            key: {
+                type: Object
+            }
+        },
+
+        // --- Get crypto.subtle
+        // --- ---------------------------
+        _getCryptoSubtle: function () {
+            var crypto = window.crypto || window.msCrypto; //for IE11
+            if (crypto.webkitSubtle) {
+                return window.crypto.webkitSubtle; //for Safari
+            }
+            return crypto.subtle;
+        },
+
+        // --- Key generation
+        // --- ---------------------------
+        _generateCryptoKeyPromise: function (algo, keyFormat) {
+            var cryptoSubtle = this._getCryptoSubtle();
+            var promise = cryptoSubtle.generateKey(algo, true, ["sign", "verify"]);
+            promise = promise.then(function (key) {
+                return cryptoSubtle.exportKey(keyFormat, key);
+            });
+            return promise;
+        },
+        _generateCryptoKey: function () {
+            var self = this;
+            var algo = this.algo;
+            var keyFormat = this.keyFormat;
+            var keyPromise = this._generateCryptoKeyPromise(algo, keyFormat);
+            keyPromise.then(function (key) {
+                self.key = key;
+                self._fireCryptoKeyGen(key, keyFormat);
+                return key;
+            }).catch(function (err) {
+                self.key = undefined;
+                self._fireCryptoKeyGenError(err, keyFormat);
+            });
+        },
+        _fireCryptoKeyGen: function (key, keyFormat) {
+            this.fire('key-gen', {key: key, format: keyFormat});
+        },
+        _fireCryptoKeyGenError: function (error, keyFormat) {
+            console.error(err);
+            this.fire('error-key-gen', {error: error, format: keyFormat});
+        },
+        // --- Sign
+        // --- ---------------------------
+        _signHMACPromise: function (algo, jwk, keyFormat, data) {
+            var self = this;
+            var cryptoSubtle = this._getCryptoSubtle();
+
+            var promise = cryptoSubtle.importKey(keyFormat, jwk, algo, true, ['sign']);
+            promise = promise.then(function (keyBuffer) {
+                var dataBuffer = self._convertDataToBuffer(data);
+                return cryptoSubtle.sign(algo, keyBuffer, dataBuffer);
+            }).then(function (macBuffer) {
+                var macHex = self.arrayBufferToHexString(macBuffer);
+                return macHex;
+            });
+            return promise;
+        },
+        _signHMAC: function (data) {
+            var self = this;
+            var key = this.key;
+            var keyFormat = this.keyFormat;
+            var algo = this.algo;
+            var signPromise = this._signHMACPromise(algo, key, keyFormat, data);
+            signPromise = signPromise.then(function (macHex) {
+                self._fireCryptoKeySign(macHex);
+                return macHex;
+            }).catch(function (err) {
+               // self.hmac = undefined;
+                self._fireCryptoKeySignError(err, keyFormat);
+            });
+            return signPromise;
+        },
+        _fireCryptoKeySign: function (macHex) {
+            this.fire('key-sign', {hmac: macHex});
+        },
+        _fireCryptoKeySignError: function (error, keyFormat) {
+            console.error(err);
+            this.fire('error-key-sign', {error: error, format: keyFormat});
+        },
+
+
+        // --- Verify
+        // --- ---------------------------
+
+        _verifySignPromise: function (jwk, macHex, data) {
+            var self = this;
+            var mac = this.hexStringToByteArray(macHex);
+            var cryptoSubtle = this._getCryptoSubtle();
+            var promise = cryptoSubtle.importKey('jwk', jwk, this.algo, true, ['verify']);
+            promise = promise.then(function (key) {
+                var text2verify = self._convertDataToBuffer(data);
+                return cryptoSubtle.verify(algo, key, mac, text2verify);
+            });
+            return promise;
+        },
+
+        _fireCryptoKeyVerify: function (macHex) {
+            this.fire('key-verify', {hmac: macHex});
+        },
+        _fireCryptoKeyVerifyError: function (error, keyFormat) {
+            console.error(err);
+            this.fire('error-key-verify', {error: error, format: keyFormat});
+        },
+
+
+        // --- Utilities
+        // --- ---------------------------
+        _convertDataToBuffer: function (data) {
+            var buffer = new TextEncoder('utf-8').encode(JSON.stringify(data));
+            return buffer;
+        },
+
+        // https://blog.engelke.com/tag/webcrypto/
+        arrayBufferToHexString: function (arrayBuffer) {
+            var byteArray = new Uint8Array(arrayBuffer);
+            var hexString = "";
+            var nextHexByte;
+            for (var i = 0; i < byteArray.byteLength; i++) {
+                nextHexByte = byteArray[i].toString(16);  // Integer to base 16
+                if (nextHexByte.length < 2) {
+                    nextHexByte = "0" + nextHexByte;     // Otherwise 10 becomes just a instead of 0a
+                }
+                hexString += nextHexByte;
+            }
+            return hexString;
+        },
+
+        //https://blog.engelke.com/tag/webcrypto/
+        hexStringToByteArray: function (hexString) {
+            if (hexString.length % 2 !== 0) {
+                throw Error("Must have an even number of hex digits to convert to bytes");
+            }
+            var numBytes = hexString.length / 2;
+            var byteArray = new Uint8Array(numBytes);
+            for (var i = 0; i < numBytes; i++) {
+                byteArray[i] = parseInt(hexString.substr(i * 2, 2), 16);
+            }
+            return byteArray;
+        },
+
+        // --- End
+        // --- ---------------------------
+    };
+
+</script>
