@@ -16,8 +16,8 @@ Polymer Element fire-crypto-hmac-sign
                 display: block;
             }
         </style>
-        <h2>Crypto key : [[key]]</h2>
-        <h2>Sign with : [[hmac]]</h2>
+        <h2 on-tap="generateKey">Crypto key : [[key]]</h2>
+        <h2 on-tap="signHMAC">Sign with : [[hmac]]</h2>
     </template>
 
     <script>
@@ -37,7 +37,10 @@ Polymer Element fire-crypto-hmac-sign
                 },
                 data: {
                     type: Object,
-                    readonly: true
+                    readonly: true,
+                    value: function () {
+                        return { name: "toto"}
+                    }
                 }
             },
 
