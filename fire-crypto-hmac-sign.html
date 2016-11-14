@@ -1,0 +1,53 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<link rel="import" href="fire-crypto-hmac-sign-behaviour.html">
+
+<!--
+`fire-crypto-hmac-sign`
+Polymer Element fire-crypto-hmac-sign
+
+@demo demo/index.html 
+-->
+
+<dom-module id="fire-crypto-hmac-sign">
+    <template>
+        <style>
+            :host {
+                display: block;
+            }
+        </style>
+        <h2>Crypto key : [[key]]</h2>
+        <h2>Sign with : [[hmac]]</h2>
+    </template>
+
+    <script>
+        Polymer({
+
+            is: 'fire-crypto-hmac-sign',
+
+
+            behaviors: [
+                FiveElements.FireCryptoHmacSignBehavior
+            ],
+
+            properties: {
+                hmac: {
+                    type: String,
+                    value: 'fire-crypto-hmac-sign',
+                },
+                data: {
+                    type: Object,
+                    readonly: true
+                }
+            },
+
+            generateKey: function () {
+                this._generateCryptoKey();
+            },
+            signHMAC: function () {
+                this._signHMAC(this.data);
+            }
+
+        });
+    </script>
+</dom-module>
