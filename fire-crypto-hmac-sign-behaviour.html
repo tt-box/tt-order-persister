@@ -34,7 +34,11 @@ Polymer Element fire-hmac-sign-behaviour
             },
             key: {
                 type: Object
+            },
+            signature: {
+                type: Object
             }
+
         },
 
         // --- Get crypto.subtle
@@ -63,6 +67,8 @@ Polymer Element fire-hmac-sign-behaviour
             var keyFormat = this.keyFormat;
             var keyPromise = this._generateCryptoKeyPromise(algo, keyFormat);
             keyPromise.then(function (key) {
+                console.log('_generateCryptoKeyPromise', key);
+
                 self.key = key;
                 self._fireCryptoKeyGen(key, keyFormat);
                 return key;
@@ -75,7 +81,7 @@ Polymer Element fire-hmac-sign-behaviour
             this.fire('key-gen', {key: key, format: keyFormat});
         },
         _fireCryptoKeyGenError: function (error, keyFormat) {
-            console.error(err);
+            console.error(error);
             this.fire('error-key-gen', {error: error, format: keyFormat});
         },
         // --- Sign
@@ -84,6 +90,7 @@ Polymer Element fire-hmac-sign-behaviour
             var self = this;
             var cryptoSubtle = this._getCryptoSubtle();
 
+//            var promise = cryptoSubtle.importKey(keyFormat, jwk, algo, true, ['sign']);
             var promise = cryptoSubtle.importKey(keyFormat, jwk, algo, true, ['sign']);
             promise = promise.then(function (keyBuffer) {
                 var dataBuffer = self._convertDataToBuffer(data);
@@ -101,6 +108,7 @@ Polymer Element fire-hmac-sign-behaviour
             var algo = this.algo;
             var signPromise = this._signHMACPromise(algo, key, keyFormat, data);
             signPromise = signPromise.then(function (macHex) {
+                self.signature = macHex;
                 self._fireCryptoKeySign(macHex);
                 return macHex;
             }).catch(function (err) {
@@ -110,10 +118,11 @@ Polymer Element fire-hmac-sign-behaviour
             return signPromise;
         },
         _fireCryptoKeySign: function (macHex) {
+            console.log('sign hmac', macHex);
             this.fire('key-sign', {hmac: macHex});
         },
         _fireCryptoKeySignError: function (error, keyFormat) {
-            console.error(err);
+            console.error(error);
             this.fire('error-key-sign', {error: error, format: keyFormat});
         },
 
@@ -121,11 +130,11 @@ Polymer Element fire-hmac-sign-behaviour
         // --- Verify
         // --- ---------------------------
 
-        _verifySignPromise: function (jwk, macHex, data) {
+        _verifySignPromise: function (jwk, algo, macHex, data) {
             var self = this;
             var mac = this.hexStringToByteArray(macHex);
             var cryptoSubtle = this._getCryptoSubtle();
-            var promise = cryptoSubtle.importKey('jwk', jwk, this.algo, true, ['verify']);
+            var promise = cryptoSubtle.importKey('jwk', jwk, algo, true, ['verify']);
             promise = promise.then(function (key) {
                 var text2verify = self._convertDataToBuffer(data);
                 return cryptoSubtle.verify(algo, key, mac, text2verify);
@@ -133,11 +142,28 @@ Polymer Element fire-hmac-sign-behaviour
             return promise;
         },
 
-        _fireCryptoKeyVerify: function (macHex) {
-            this.fire('key-verify', {hmac: macHex});
+        _verifySign: function (data) {
+            var self = this;
+            var key = this.key;
+            var keyFormat = this.keyFormat;
+            var signature = this.signature;
+            var algo = this.algo;
+            var verifyPromise = this._verifySignPromise(key, algo, signature , data);
+            verifyPromise = verifyPromise.then(function ( isValid) {
+                self._fireCryptoKeyVerify(isValid, signature);
+                return isValid;
+            }).catch(function (err) {
+                // self.hmac = undefined;
+                self._fireCryptoKeyVerifyError(err, keyFormat);
+            });
+            return verifyPromise;
+        },
+        _fireCryptoKeyVerify: function (isValid, signature) {
+            console.log('isValid', isValid);
+            this.fire('key-verify', {isValid: isValid, signature: signature });
         },
         _fireCryptoKeyVerifyError: function (error, keyFormat) {
-            console.error(err);
+            console.error(error);
             this.fire('error-key-verify', {error: error, format: keyFormat});
         },
 

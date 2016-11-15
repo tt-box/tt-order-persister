@@ -14,7 +14,7 @@
     "lint": "polymer lint --input tt-order-persister.html",
     "dev": "polymer serve -p 8080 & npm run watch",
     "test": "polymer test",
-    "watch": "browser-sync start --proxy localhost:8080 --startPath '/components/tt-order-persister/demo/' --files '*.html, *.js, demo/*' "
+    "watch": "node_modules/.bin/browser-sync start --proxy localhost:8080 --startPath '/components/tt-order-persister/demo/' --files '*.html, *.js, demo/*' "
   },
   "author": "",
   "license": "ISC",

@@ -6,6 +6,8 @@
 <link rel="import" href="../app-pouchdb/app-pouchdb-conflict-resolution.html">
 <link rel="import" href="../app-pouchdb/app-pouchdb-sync.html">
 
+<link rel="import" href="fire-crypto-hmac-sign.html">
+
 <!--<script src="../bytebuffer/dist/bytebuffer.js"></script>-->
 
 <!--
@@ -31,6 +33,7 @@
         </app-pouchdb-document>
 
         <h1 on-tap="testHmac">Hash</h1>
+        <fire-crypto-hmac-sign id="hmac"></fire-crypto-hmac-sign>
     </template>
 
     <script>
