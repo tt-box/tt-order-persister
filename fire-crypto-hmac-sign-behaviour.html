@@ -1,5 +1,7 @@
 <link rel="import" href="../polymer/polymer.html">
 
+<link rel="import" href="fire-unibabel.html">
+
 <!--
 `fire-hmac-sign-behaviour`
 Polymer Element fire-hmac-sign-behaviour
@@ -112,7 +114,7 @@ Polymer Element fire-hmac-sign-behaviour
                 self._fireCryptoKeySign(macHex);
                 return macHex;
             }).catch(function (err) {
-               // self.hmac = undefined;
+                // self.hmac = undefined;
                 self._fireCryptoKeySignError(err, keyFormat);
             });
             return signPromise;
@@ -177,30 +179,33 @@ Polymer Element fire-hmac-sign-behaviour
 
         // https://blog.engelke.com/tag/webcrypto/
         arrayBufferToHexString: function (arrayBuffer) {
-            var byteArray = new Uint8Array(arrayBuffer);
-            var hexString = "";
-            var nextHexByte;
-            for (var i = 0; i < byteArray.byteLength; i++) {
-                nextHexByte = byteArray[i].toString(16);  // Integer to base 16
-                if (nextHexByte.length < 2) {
-                    nextHexByte = "0" + nextHexByte;     // Otherwise 10 becomes just a instead of 0a
-                }
-                hexString += nextHexByte;
-            }
-            return hexString;
+            console.log(window.Unibabel);
+            return window.Unibabel.bufferToHex(arrayBuffer);
+//            var byteArray = new Uint8Array(arrayBuffer);
+//            var hexString = "";
+//            var n.extHexByte;
+//            for (var i = 0; i < byteArray.byteLength; i++) {
+//                nextHexByte = byteArray[i].toString(16);  // Integer to base 16
+//                if (nextHexByte.length < 2) {
+//                    nextHexByte = "0" + nextHexByte;     // Otherwise 10 becomes just a instead of 0a
+//                }
+//                hexString += nextHexByte;
+//            }
+//            return hexString;
         },
 
         //https://blog.engelke.com/tag/webcrypto/
         hexStringToByteArray: function (hexString) {
-            if (hexString.length % 2 !== 0) {
-                throw Error("Must have an even number of hex digits to convert to bytes");
-            }
-            var numBytes = hexString.length / 2;
-            var byteArray = new Uint8Array(numBytes);
-            for (var i = 0; i < numBytes; i++) {
-                byteArray[i] = parseInt(hexString.substr(i * 2, 2), 16);
-            }
-            return byteArray;
+            return window.Unibabel.hexToBuffer(hexString);
+//            if (hexString.length % 2 !== 0) {
+//                throw Error("Must have an even number of hex digits to convert to bytes");
+//            }
+//            var numBytes = hexString.length / 2;
+//            var byteArray = new Uint8Array(numBytes);
+//            for (var i = 0; i < numBytes; i++) {
+//                byteArray[i] = parseInt(hexString.substr(i * 2, 2), 16);
+//            }
+//            return byteArray;
         },
 
         // --- End
