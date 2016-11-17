@@ -1,0 +1,39 @@
+<link rel="import" href="../polymer/polymer.html">
+
+
+<link rel="import" href="fire-crypto-generatekey-behaviour.html">
+
+<!--
+`fire-crypto-generatekey`
+
+
+@demo demo/index.html 
+-->
+
+<dom-module id="fire-crypto-generatekey">
+    <template>
+        <style>
+            :host {
+                display: block;
+            }
+        </style>
+
+    </template>
+
+    <script>
+        Polymer({
+
+            is: 'fire-crypto-generatekey',
+
+            behaviors: [
+                FiveElements.FireCryptoGenerateKeyBehavior
+            ],
+
+            properties: {
+
+            },
+
+
+        });
+    </script>
+</dom-module>
